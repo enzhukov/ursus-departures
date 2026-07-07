@@ -1,0 +1,93 @@
+/* Platform departure board look: dark, amber, monospace */
+
+:root {
+  --bg: #0b0e11;
+  --panel: #12161b;
+  --amber: #ffb43a;
+  --amber-dim: #a97a2a;
+  --white: #e8e6e0;
+  --red: #ff5c49;
+  --green: #55d47a;
+  --row-border: #1d232b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--amber);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 14px 4px 10px;
+  border-bottom: 2px solid var(--amber-dim);
+}
+
+#date {
+  color: var(--white);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+#clock {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+main { flex: 1; }
+
+.row {
+  display: grid;
+  grid-template-columns: 2.6em 3.2em 4.6em 1fr auto;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--row-border);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.row .st   { color: var(--white); font-weight: 700; }
+.row .mins { font-weight: 700; text-align: right; }
+.row .mins.soon { color: var(--green); }
+.row .hm   { color: var(--amber-dim); }
+.row .line { color: var(--white); }
+.row .delay { color: var(--red); font-weight: 700; }
+
+.row.leaving .mins { animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) {
+  .row.leaving .mins { animation: none; }
+}
+
+.empty {
+  padding: 40px 8px;
+  color: var(--amber-dim);
+  font-size: 0.95rem;
+  text-align: center;
+  line-height: 1.6;
+}
+
+footer {
+  padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
+  color: var(--amber-dim);
+  font-size: 0.72rem;
+  text-align: center;
+}
+footer .warn { color: var(--red); }
