@@ -21,6 +21,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 GTFS_URL = "https://mkuran.pl/gtfs/polish_trains.zip"
+USER_AGENT = "ursus-departures (personal train board; github.com/enzhukov)"
 GTFS_FILE = Path("gtfs.zip")
 OUTPUT = Path("docs/timetable.json")
 
@@ -57,19 +58,19 @@ def parse_gtfs_time(hms: str, service_day: datetime) -> datetime:
     return service_day + timedelta(hours=h, minutes=m, seconds=s)
 
 
-def main() -> None:
-     print(f"Downloading {GTFS_URL} ...")
+def download() -> None:
+    print(f"Downloading {GTFS_URL} ...")
     req = urllib.request.Request(
         GTFS_URL,
-        headers={
-            "User-Agent": "Mozilla/5.0 (ursus-departures; personal train board; "
-                          "https://github.com/enzhukov/ursus-departures)",
-            "Accept": "*/*",
-        },
+        headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
     )
     with urllib.request.urlopen(req) as resp, open(GTFS_FILE, "wb") as f:
         shutil.copyfileobj(resp, f)
     print(f"Downloaded {GTFS_FILE.stat().st_size / 1e6:.1f} MB")
+
+
+def main() -> None:
+    download()
 
     z = zipfile.ZipFile(GTFS_FILE)
     names = set(z.namelist())
