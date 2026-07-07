@@ -164,7 +164,7 @@ def main() -> None:
                 or "?").strip()
         lines_seen.add(line)
 
-        for i, (_, stop_id, dep_time) in enumerate(stop_list):
+        for i, (seq, stop_id, dep_time) in enumerate(stop_list):
             if stop_id not in origin_ids:
                 continue
             # center-bound check: any center station later in the trip?
@@ -174,6 +174,7 @@ def main() -> None:
                 dt = parse_gtfs_time(dep_time, wanted_days[ymd])
                 departures.append({
                     "station": origin_ids[stop_id],
+                    "seq": seq,
                     "time": dt.isoformat(),
                     "line": line,
                     "headsign": trip.get("trip_headsign", "").strip(),
