@@ -1,0 +1,30 @@
+name: Rebuild timetable
+
+on:
+  schedule:
+    - cron: "30 1 * * *"     # 01:30 UTC = 03:30 Warsaw (summer)
+  workflow_dispatch:          # adds a manual "Run workflow" button
+
+permissions:
+  contents: write             # allow the workflow to commit timetable.json
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build timetable.json
+        run: python scripts/build_timetable.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "timetable-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/timetable.json
+          git commit -m "Update timetable $(date -u +%F)" || echo "No changes"
+          git push
