@@ -12,6 +12,7 @@ Memory-friendly: streams stop_times.txt twice instead of loading it whole.
 import csv
 import io
 import json
+import shutil
 import sys
 import urllib.request
 import zipfile
@@ -57,8 +58,17 @@ def parse_gtfs_time(hms: str, service_day: datetime) -> datetime:
 
 
 def main() -> None:
-    print(f"Downloading {GTFS_URL} ...")
-    urllib.request.urlretrieve(GTFS_URL, GTFS_FILE)
+     print(f"Downloading {GTFS_URL} ...")
+    req = urllib.request.Request(
+        GTFS_URL,
+        headers={
+            "User-Agent": "Mozilla/5.0 (ursus-departures; personal train board; "
+                          "https://github.com/enzhukov/ursus-departures)",
+            "Accept": "*/*",
+        },
+    )
+    with urllib.request.urlopen(req) as resp, open(GTFS_FILE, "wb") as f:
+        shutil.copyfileobj(resp, f)
     print(f"Downloaded {GTFS_FILE.stat().st_size / 1e6:.1f} MB")
 
     z = zipfile.ZipFile(GTFS_FILE)
