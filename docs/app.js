@@ -2,12 +2,13 @@
 
 const HORIZON_MIN = 120;   // show departures up to 2 h ahead
 const MAX_ROWS = 12;
-const DELAYS_URL = "https://mkuran.pl/gtfs/polish_trains/updates.json";
+const DELAYS_URL = "https://ursus-delays.enzhukov.workers.dev";
+const DELAYS_MAX_AGE_MIN = 10;  // ignore the feed if its own timestamp is older
 
-let timetable = [];        // from timetable.json
-let delays = {};           // trip_id -> delay in seconds
-let delaysTimestamp = null;
-let delaysAvailable = false;
+let timetable = [];
+let predictions = {};      // "trip_id:seq" -> predicted Date
+let feedTimestamp = null;  // Date from the feed itself
+let delaysOk = false;
 let generated = null;
 
 async function loadTimetable() {
@@ -28,22 +29,26 @@ async function loadDelays() {
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
 
-    // NOTE: adapt this mapping to the real schema of updates.json.
-    // Expected shape (verify once in the browser console):
-    //   an array/object of trip updates, each with a trip_id and a delay.
-    const next = {};
-    const list = Array.isArray(data) ? data : (data.updates || data.trips || []);
-    for (const u of list) {
-      const id = u.trip_id || (u.trip && u.trip.trip_id);
-      const delay = u.delay ?? (u.arrival && u.arrival.delay) ?? null;
-      if (id != null && delay != null) next[id] = Number(delay);
+    feedTimestamp = data.timestamp ? new Date(data.timestamp) : null;
+    const ageMin = feedTimestamp ? (Date.now() - feedTimestamp) / 60000 : Infinity;
+    if (ageMin > DELAYS_MAX_AGE_MIN) {
+      // upstream feed is stuck - don't trust stale predictions
+      delaysOk = false;
+      predictions = {};
+      return;
     }
-    delays = next;
-    delaysTimestamp = new Date();
-    delaysAvailable = true;
+
+    const next = {};
+    for (const u of data.trip_updates || []) {
+      for (const st of u.stop_times || []) {
+        const t = st.departure || st.arrival;
+        if (t) next[u.trip_id + ":" + st.stop_sequence] = new Date(t);
+      }
+    }
+    predictions = next;
+    delaysOk = true;
   } catch (e) {
-    // CORS block or feed down -> board still works, just without delays
-    delaysAvailable = false;
+    delaysOk = false;
     console.warn("delays unavailable", e);
   }
 }
@@ -70,9 +75,19 @@ function render() {
 
   const rows = timetable
     .map(d => {
-      const delaySec = delays[d.trip_id] ?? 0;
-      const dep = new Date(new Date(d.time).getTime() + delaySec * 1000);
-      return { ...d, dep, delayMin: Math.round(delaySec / 60) };
+      const scheduled = new Date(d.time);
+      let dep = scheduled;
+      let delayMin = 0;
+      if (delaysOk && d.seq !== undefined) {
+        const pred = predictions[d.trip_id + ":" + d.seq];
+        // guard: a trip_id repeats on multiple days; only apply a
+        // prediction that is close to this row's scheduled time
+        if (pred && Math.abs(pred - scheduled) < 6 * 3600 * 1000) {
+          dep = pred;
+          delayMin = Math.round((pred - scheduled) / 60000);
+        }
+      }
+      return { ...d, dep, delayMin };
     })
     .filter(d => d.dep >= now && (d.dep - now) / 60000 <= HORIZON_MIN)
     .sort((a, b) => a.dep - b.dep)
@@ -89,7 +104,7 @@ function render() {
         { hour: "2-digit", minute: "2-digit" });
       const soon = mins <= 5 ? " soon" : "";
       const leaving = mins <= 1 ? " leaving" : "";
-      const delay = d.delayMin > 0
+      const delay = d.delayMin >= 1
         ? `<span class="delay">+${d.delayMin}'</span>`
         : "<span></span>";
       return `<div class="row${leaving}">
@@ -108,9 +123,11 @@ function render() {
       new Date(generated).toLocaleDateString("pl-PL",
         { day: "numeric", month: "numeric" }));
   }
-  if (delaysAvailable && delaysTimestamp) {
-    parts.push("opóźnienia: " + delaysTimestamp.toLocaleTimeString("pl-PL",
+  if (delaysOk && feedTimestamp) {
+    parts.push("opóźnienia: " + feedTimestamp.toLocaleTimeString("pl-PL",
       { hour: "2-digit", minute: "2-digit" }));
+  } else if (feedTimestamp) {
+    parts.push('<span class="warn">opóźnienia nieaktualne</span>');
   } else {
     parts.push('<span class="warn">opóźnienia niedostępne</span>');
   }
@@ -122,11 +139,10 @@ function render() {
   render();
   loadDelays().then(render);
 
-  setInterval(render, 1000);                 // tick clock + countdowns
+  setInterval(render, 1000);
   setInterval(() => loadDelays().then(render), 60 * 1000);
   setInterval(() => loadTimetable().then(render), 30 * 60 * 1000);
 
-  // recompute immediately when the phone wakes up / tab becomes visible
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) { render(); loadDelays().then(render); }
   });
