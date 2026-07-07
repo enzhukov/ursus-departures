@@ -3,7 +3,7 @@
 A minimal, phone-friendly departure board for trains from **Warszawa Ursus (WU)**
 and **Warszawa Ursus Północny (UP)** heading **towards central Warsaw only**.
 
-Live page: `https://<your-username>.github.io/<repo-name>/`
+Live page: `https://enzhukov.github.io/ursus-departures/`
 
 ## How it works
 
