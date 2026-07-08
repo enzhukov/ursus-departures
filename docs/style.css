@@ -6,6 +6,8 @@
   --amber: #ffb43a;
   --amber-dim: #a97a2a;
   --white: #e8e6e0;
+  --muted: #b7ae9e;
+  --faint: #6f675a;
   --red: #ff5c49;
   --green: #55d47a;
   --row-border: #1d232b;
@@ -54,9 +56,9 @@ main { flex: 1; }
 
 .row {
   display: grid;
-  grid-template-columns: 2.6em 3.2em 4.6em 1fr auto;
-  align-items: baseline;
-  gap: 0.4em;
+  grid-template-columns: 2.2em 2.9em 4.5em auto 1fr;
+  align-items: center;
+  gap: 0.45em;
   padding: 12px 4px;
   border-bottom: 1px solid var(--row-border);
   font-size: 1.15rem;
@@ -67,13 +69,47 @@ main { flex: 1; }
 .row .mins { font-weight: 700; text-align: right; }
 .row .mins.soon { color: var(--green); }
 .row .hm   { color: var(--amber-dim); }
-.row .line { color: var(--white); }
+.row .line { color: var(--white); white-space: nowrap; }
 .row .delay { color: var(--red); font-weight: 700; }
+
+/* --- destination column (platform-board style) --- */
+.row .dest {
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: right;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  min-width: 0;
+}
+.row .dest .in { display: inline-block; }
+
+/* scrolling variant, only applied when the name overflows */
+.row .dest.scroll {
+  text-align: left;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+}
+.row .dest.scroll .in {
+  animation: marquee var(--dur, 10s) linear infinite;
+  will-change: transform;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(var(--shift, 120px) * -1)); }
+}
 
 .row.leaving .mins { animation: blink 1s step-end infinite; }
 @keyframes blink { 50% { opacity: 0.25; } }
+
 @media (prefers-reduced-motion: reduce) {
   .row.leaving .mins { animation: none; }
+  .row .dest.scroll .in { animation: none; }
+  .row .dest.scroll {
+    text-overflow: ellipsis;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 .empty {
@@ -91,3 +127,9 @@ footer {
   text-align: center;
 }
 footer .warn { color: var(--red); }
+footer .about {
+  margin-top: 7px;
+  color: var(--faint);
+  font-size: 0.64rem;
+  line-height: 1.55;
+}
