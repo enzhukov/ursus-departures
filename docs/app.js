@@ -5,11 +5,17 @@ const MAX_ROWS = 12;
 const DELAYS_URL = "https://ursus-delays.enzhukov.workers.dev";
 const DELAYS_MAX_AGE_MIN = 10;  // ignore the feed if its own timestamp is older
 
+const ABOUT_HTML =
+  '<div class="about">Ten rozkład odjazdów pokazuje pociągi SKM i KM ' +
+  'odjeżdżające z dwóch stacji: WU – Warszawa Ursus, ' +
+  'UP – Warszawa Ursus Północny</div>';
+
 let timetable = [];
 let predictions = {};      // "trip_id:seq" -> predicted Date
 let feedTimestamp = null;  // Date from the feed itself
 let delaysOk = false;
 let generated = null;
+let lastBoardHtml = "";    // avoid DOM rewrites that would restart marquees
 
 async function loadTimetable() {
   try {
@@ -58,18 +64,38 @@ function fmtDate(now) {
     { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
+function setBoardHtml(html) {
+  if (html === lastBoardHtml) return;
+  document.getElementById("board").innerHTML = html;
+  lastBoardHtml = html;
+  setupMarquees();
+}
+
+function setupMarquees() {
+  document.querySelectorAll(".dest").forEach(el => {
+    const inner = el.querySelector(".in");
+    if (!inner || !inner.textContent) return;
+    if (inner.scrollWidth <= el.clientWidth + 2) return; // fits, stay static
+
+    const text = inner.textContent;
+    inner.textContent = text + "\u00A0".repeat(6) + text; // loop copy + gap
+    const shift = inner.scrollWidth / 2;                  // one copy + gap
+    el.style.setProperty("--shift", shift + "px");
+    el.style.setProperty("--dur", Math.max(7, shift / 22) + "s");
+    el.classList.add("scroll");
+  });
+}
+
 function render() {
   const now = new Date();
   document.getElementById("date").textContent = fmtDate(now);
   document.getElementById("clock").textContent =
     now.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 
-  const board = document.getElementById("board");
-
   if (!timetable.length) {
-    board.innerHTML =
+    setBoardHtml(
       '<div class="empty">Brak danych rozkładu.<br>' +
-      'Uruchom akcję „Rebuild timetable” w GitHub Actions.</div>';
+      'Uruchom akcję „Rebuild timetable” w GitHub Actions.</div>');
     return;
   }
 
@@ -94,27 +120,28 @@ function render() {
     .slice(0, MAX_ROWS);
 
   if (!rows.length) {
-    board.innerHTML =
+    setBoardHtml(
       '<div class="empty">Brak odjazdów w najbliższych ' +
-      HORIZON_MIN + ' minutach.</div>';
+      HORIZON_MIN + ' minutach.</div>');
   } else {
-    board.innerHTML = rows.map(d => {
+    setBoardHtml(rows.map(d => {
       const mins = Math.floor((d.dep - now) / 60000);
       const hm = d.dep.toLocaleTimeString("pl-PL",
         { hour: "2-digit", minute: "2-digit" });
       const soon = mins <= 5 ? " soon" : "";
       const leaving = mins <= 1 ? " leaving" : "";
       const delay = d.delayMin >= 1
-        ? `<span class="delay">+${d.delayMin}'</span>`
-        : "<span></span>";
+        ? ` <span class="delay">+${d.delayMin}'</span>`
+        : "";
+      const dest = d.headsign || "";
       return `<div class="row${leaving}">
         <span class="st">${d.station}</span>
         <span class="mins${soon}">${mins}'</span>
         <span class="hm">(${hm})</span>
-        <span class="line">${d.line}</span>
-        ${delay}
+        <span class="line">${d.line}${delay}</span>
+        <span class="dest"><span class="in">${dest}</span></span>
       </div>`;
-    }).join("");
+    }).join(""));
   }
 
   const parts = [];
@@ -124,14 +151,16 @@ function render() {
         { day: "numeric", month: "numeric" }));
   }
   if (delaysOk && feedTimestamp) {
-    parts.push("opóźnienia: " + feedTimestamp.toLocaleTimeString("pl-PL",
-      { hour: "2-digit", minute: "2-digit" }));
+    parts.push("opóźnienia zaktualizowano: " +
+      feedTimestamp.toLocaleTimeString("pl-PL",
+        { hour: "2-digit", minute: "2-digit" }));
   } else if (feedTimestamp) {
     parts.push('<span class="warn">opóźnienia nieaktualne</span>');
   } else {
     parts.push('<span class="warn">opóźnienia niedostępne</span>');
   }
-  document.getElementById("status").innerHTML = parts.join(" · ");
+  document.getElementById("status").innerHTML =
+    parts.join(" · ") + ABOUT_HTML;
 }
 
 (async () => {
