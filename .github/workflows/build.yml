@@ -25,6 +25,6 @@ jobs:
         run: |
           git config user.name "timetable-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add docs/timetable.json
+          git add docs/timetable.json docs/arrivals.json
           git commit -m "Update timetable $(date -u +%F)" || echo "No changes"
           git push
