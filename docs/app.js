@@ -139,12 +139,13 @@ function render() {
         { hour: "2-digit", minute: "2-digit" });
       const soon = mins <= 5 ? " soon" : "";
       const leaving = mins <= 1 ? " leaving" : "";
+      const up = d.station === "UP" ? " up" : "";
       const delay = d.delayMin >= 1
         ? ` <span class="delay">+${d.delayMin}'</span>`
         : "";
       const dest = d.headsign || "";
       return `<div class="row${leaving}">
-        <span class="st">${d.station}</span>
+        <span class="st${up}">${d.station}</span>
         <span class="mins${soon}">${mins}'</span>
         <span class="hm">(${hm})</span>
         <span class="line">${d.line}${delay}</span>
