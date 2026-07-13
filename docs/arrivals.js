@@ -161,10 +161,13 @@ function render() {
         ? ` <span class="delay">+${d.delayMin}'</span>`
         : "";
       let dest = d.target + ": " + (d.headsign || "");
-      if (d.platform && d.track) {
-        dest += ` (Peron ${d.platform} Tor ${d.track})`;
-      } else if (d.platform) {
-        dest += ` (Peron ${d.platform})`;
+      // Peron/Tor only for Warszawa Zachodnia
+      if (origin === "WZ") {
+        if (d.platform && d.track) {
+          dest += ` (Peron ${d.platform} Tor ${d.track})`;
+        } else if (d.platform) {
+          dest += ` (Peron ${d.platform})`;
+        }
       }
       return `<div class="row${leaving}">
         <span class="st">${d.origin}</span>
