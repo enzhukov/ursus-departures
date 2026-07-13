@@ -65,6 +65,19 @@ main { flex: 1; }
   font-variant-numeric: tabular-nums;
 }
 
+/* --- column headers --- */
+.row.head {
+  padding: 8px 4px 5px;
+  font-size: 0.56rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--amber-dim);
+  border-bottom: 1px solid var(--row-border);
+}
+.row.head .h-min,
+.row.head .h-dest { text-align: right; }
+
 .row .st   { color: var(--white); font-weight: 700; }
 .row .mins { font-weight: 700; text-align: right; }
 .row .mins.soon { color: var(--green); }
