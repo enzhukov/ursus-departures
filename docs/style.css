@@ -56,9 +56,10 @@ main { flex: 1; }
 
 .row {
   display: grid;
-  grid-template-columns: 2.2em 2.9em 4.5em auto 1fr;
+  /* rem, not em: identical column geometry for header and data rows */
+  grid-template-columns: 2.5rem 3.4rem 5.2rem auto 1fr;
   align-items: center;
-  gap: 0.45em;
+  gap: 0.5rem;
   padding: 12px 4px;
   border-bottom: 1px solid var(--row-border);
   font-size: 1.15rem;
