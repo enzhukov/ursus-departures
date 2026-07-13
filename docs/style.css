@@ -10,6 +10,7 @@
   --faint: #6f675a;
   --red: #ff5c49;
   --green: #55d47a;
+  --blue: #5da9ff;
   --row-border: #1d232b;
 }
 
@@ -121,6 +122,7 @@ main { flex: 1; }
 .row.head .h-dest { text-align: right; }
 
 .row .st   { color: var(--white); font-weight: 700; }
+.row .st.up { color: var(--blue); }
 .row .mins { font-weight: 700; text-align: right; }
 .row .mins.soon { color: var(--green); }
 .row .hm   { color: var(--amber-dim); }
