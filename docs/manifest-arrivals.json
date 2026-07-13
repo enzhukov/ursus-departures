@@ -1,0 +1,12 @@
+{
+  "name": "Back to Ursus",
+  "short_name": "← Ursus",
+  "start_url": "arrivals.html",
+  "display": "standalone",
+  "background_color": "#0b0e11",
+  "theme_color": "#0b0e11",
+  "icons": [
+    { "src": "icon-arrivals-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-arrivals-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
