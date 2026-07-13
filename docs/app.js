@@ -5,10 +5,19 @@ const MAX_ROWS = 12;
 const DELAYS_URL = "https://ursus-delays.enzhukov.workers.dev";
 const DELAYS_MAX_AGE_MIN = 10;  // ignore the feed if its own timestamp is older
 
+const HEAD_HTML =
+  '<div class="row head">' +
+  '<span>Stacja</span>' +
+  '<span class="h-min">Min</span>' +
+  '<span>Odjazd</span>' +
+  '<span>Linia</span>' +
+  '<span class="h-dest">Kierunek</span>' +
+  '</div>';
+
 const ABOUT_HTML =
   '<div class="about">Ten rozkład odjazdów pokazuje pociągi SKM i KM ' +
   'odjeżdżające z dwóch stacji: WU – Warszawa Ursus, ' +
-  'UP – Warszawa Ursus Północny</div>';
+  'UP – Warszawa Ursus Północny, w kierunku centrum Warszawy</div>';
 
 let timetable = [];
 let predictions = {};      // "trip_id:seq" -> predicted Date
@@ -124,7 +133,7 @@ function render() {
       '<div class="empty">Brak odjazdów w najbliższych ' +
       HORIZON_MIN + ' minutach.</div>');
   } else {
-    setBoardHtml(rows.map(d => {
+    setBoardHtml(HEAD_HTML + rows.map(d => {
       const mins = Math.floor((d.dep - now) / 60000);
       const hm = d.dep.toLocaleTimeString("pl-PL",
         { hour: "2-digit", minute: "2-digit" });
